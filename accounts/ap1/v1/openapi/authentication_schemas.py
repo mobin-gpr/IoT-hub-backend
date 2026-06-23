@@ -5,10 +5,15 @@ All docstrings in English, user-facing messages in Persian in examples.
 
 from drf_spectacular.utils import (
     extend_schema,
+    OpenApiParameter,
     OpenApiResponse,
     OpenApiExample,
 )
+from drf_spectacular.types import OpenApiTypes
 from rest_framework import serializers
+
+# Import serializers for request/response schemas
+from ..serializers import LoginSendOTPSerializer, OTPVerifySerializer
 
 # ============================================================================
 # 🔐 Authentication Endpoints
@@ -47,7 +52,7 @@ login_send_otp_schema = extend_schema(
     - OTP timeout is configured via `AUTH_CACHE_TIMEOUT` (default: 120 seconds)
     - The same endpoint handles both login and signup (user creation happens on verification)
     """,
-    request=serializers.Serializer,
+    request=LoginSendOTPSerializer,
     responses={
         200: OpenApiResponse(
             description="✅ OTP sent successfully",
@@ -80,6 +85,7 @@ login_send_otp_schema = extend_schema(
         ),
     },
 )
+
 
 login_verify_otp_schema = extend_schema(
     tags=["🔐 Authentication"],
@@ -123,7 +129,7 @@ login_verify_otp_schema = extend_schema(
     - Role is set to 'personal' by default (can be extended later)
     - OTP is deleted immediately after verification to prevent reuse
     """,
-    request=serializers.Serializer,
+    request=OTPVerifySerializer,
     responses={
         200: OpenApiResponse(
             description="✅ OTP verified successfully, tokens returned",
