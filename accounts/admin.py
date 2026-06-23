@@ -1,8 +1,8 @@
-import re
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django import forms
 from django.core.exceptions import ValidationError
+import re
 from .models import User
 
 
@@ -93,10 +93,17 @@ class CustomUserAdmin(BaseUserAdmin):
     form = UserAdminForm
     add_form = CustomUserCreationForm
 
-    list_display = ("phone_number", "full_name", "is_staff", "is_active", "date_joined")
+    list_display = (
+        "phone_number",
+        "full_name",
+        "is_staff",
+        "is_active",
+        "is_approved",
+        "date_joined",
+    )
     search_fields = ("phone_number", "full_name")
     ordering = ("phone_number",)
-    list_filter = ("is_active", "is_staff", "is_superuser")
+    list_filter = ("is_active", "is_staff", "is_superuser", "is_approved")
 
     fieldsets = (
         (None, {"fields": ("phone_number", "password")}),
@@ -108,6 +115,7 @@ class CustomUserAdmin(BaseUserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
+                    "is_approved",
                     "groups",
                     "user_permissions",
                 )

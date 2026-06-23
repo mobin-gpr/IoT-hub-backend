@@ -22,10 +22,11 @@ DATABASES = {
     }
 }
 
-# Cache using Redis (for development)
+
+# --- Cache Configuration (Local Memory for Development) ---
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.environ.get("REDIS_URL", "redis://localhost:6379/1"),
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "my_cache_table",
     }
 }

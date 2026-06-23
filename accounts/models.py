@@ -15,6 +15,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("is_approved", True)
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("کاربر ادمین باید is_staff=True داشته باشد")
@@ -32,6 +33,9 @@ class User(AbstractUser):
         db_index=True,
     )
     full_name = models.CharField(max_length=255, blank=True)
+    is_approved = models.BooleanField(
+        default=False, help_text="نشان می‌دهد که کاربر تایید شده است"
+    )
 
     USERNAME_FIELD = "phone_number"
     REQUIRED_FIELDS = []

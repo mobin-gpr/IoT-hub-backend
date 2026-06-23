@@ -16,4 +16,8 @@ dependencies = [
     "redis>=8.0.1",
     "whitenoise>=6.8.2",
     "djangorestframework-simplejwt>=5.5.1",
+    "djangorestframework-stubs>=3.17.0",
+    "drf-spectacular>=0.29.0",
+    "django-cors-headers>=4.9.0",
+    "requests>=2.34.2",
 ]
