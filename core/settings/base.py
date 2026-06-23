@@ -6,18 +6,30 @@ This file contains settings that are common to all environments.
 
 from pathlib import Path
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Application definition
 INSTALLED_APPS = [
+    # 1. Django Default Apps
+    # --------------------
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # ---
+    # 2. Third-Party Apps (External)
+    # ------------------------------
+    "rest_framework",
+    "rest_framework_simplejwt",
+    # ---
+    # 3. Project Apps (Internal)
+    # --------------------------
+    "accounts.apps.AccountsConfig",
 ]
 
 MIDDLEWARE = [
@@ -65,6 +77,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Custom User Model
+AUTH_USER_MODEL = "accounts.User"
+
 # Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -77,6 +92,34 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ============== DRF Configuration ==============
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+}
+
+# ============== JWT Configuration ==============
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=180),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "JTI_CLAIM": "jti",
+}
+
+# ============== OTP Configuration ==============
+AUTH_OTP_LENGTH = 5
+AUTH_CACHE_TIMEOUT = 120
+AUTH_PHONE_REGEX_PATTERN = r"^(09)\d{9}$"
 
 # ============== Celery Configuration ==============
 # Celery settings
