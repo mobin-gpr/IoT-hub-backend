@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     # ------------------------------
     "rest_framework",
     "rest_framework_simplejwt",
-    "corsheaders",
+    "drf_spectacular",
     # ---
     # 3. Project Apps (Internal)
     # --------------------------
@@ -34,7 +34,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -100,6 +99,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # ============== JWT Configuration ==============
@@ -123,8 +123,39 @@ AUTH_OTP_LENGTH = 5
 AUTH_CACHE_TIMEOUT = 120
 AUTH_PHONE_REGEX_PATTERN = r"^(09)\d{9}$"
 
+# ============== drf-spectacular Configuration ==============
+SPECTACULAR_SETTINGS = {
+    "TITLE": "🚀 IoT Hub API",
+    "DESCRIPTION": "IoT Hub Backend API with JWT authentication and OTP-based login.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": True,
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "displayOperationId": False,
+        "defaultModelsExpandDepth": -1,
+        "defaultModelExpandDepth": -1,
+        "docExpansion": "none",
+        "persistAuthorization": True,
+        "tryItOutEnabled": True,
+    },
+    "SECURITY": [{"BearerAuth": []}],
+    "SECURITY_SCHEMES": {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "JWT token authentication. Usage: Authorization: Bearer <token>",
+        }
+    },
+    "TAGS": [
+        {
+            "name": "🔐 Authentication",
+            "description": "Authentication endpoints (OTP, login, verify)",
+        },
+    ],
+}
+
 # ============== Celery Configuration ==============
-# Celery settings
 CELERY_BROKER_URL = os.environ.get(
     "CELERY_BROKER_URL", "amqp://iotuser:iotpass@localhost:5672//"
 )
@@ -134,13 +165,7 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
-CELERY_TASK_SOFT_TIME_LIMIT = 20 * 60  # 20 minutes
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 20 * 60
 
-# Celery Beat settings (for scheduled tasks)
-CELERY_BEAT_SCHEDULE = {
-    # Example: 'example_task': {
-    #     'task': 'your_app.tasks.example_task',
-    #     'schedule': 60.0,  # every 60 seconds
-    # },
-}
+CELERY_BEAT_SCHEDULE = {}
