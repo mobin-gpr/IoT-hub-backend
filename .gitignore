@@ -1,0 +1,193 @@
+# ==============================================================================
+# Comprehensive .gitignore for Django Projects
+# Combined from Django, Python, JetBrains, VirtualEnv, User templates
+# with additions and corrections.
+# ==============================================================================
+
+# Environments & Virtualenvs
+# ------------------------------------------------------------------------------
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.direnv/
+pyvenv.cfg
+.python-version
+__pypackages__/
+
+# Byte-compiled / optimized / DLL files
+# ------------------------------------------------------------------------------
+*.py[cod]
+*$py.class
+*.so
+__pycache__/
+*/__pycache__/
+
+# Databases
+# ------------------------------------------------------------------------------
+db.sqlite3
+db.sqlite3-journal # SQLite journal file
+
+# Django Specifics
+# ------------------------------------------------------------------------------
+*.log
+local_settings.py # For local-only settings overrides
+*.pot # Translation template files
+*.mo # Compiled translation files
+# NOTE: *.po files (source translations) SHOULD usually be committed.
+
+# Media & Static Files (User uploaded & Collected)
+# ------------------------------------------------------------------------------
+media/ # User uploaded files - Almost always ignore
+core/media/
+staticfiles/ # Files collected by collectstatic - Usually ignore
+
+# Distribution / packaging / Build artifacts
+# ------------------------------------------------------------------------------
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec # PyInstaller spec files
+target/ # PyBuilder target directory
+htmlcov/ # Coverage reports
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+cover/
+
+# Test Runner Caches & Logs
+# ------------------------------------------------------------------------------
+.pytest_cache/
+.tox/
+.nox/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE / Editor Configuration Files
+# ------------------------------------------------------------------------------
+# JetBrains / PyCharm
+.idea
+.idea/ # Standard practice is to share some files, ignore user-specific ones below
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries/
+.idea/**/shelf/
+.idea/**/aws.xml
+.idea/**/contentModel.xml
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+.idea/**/gradle.xml
+.idea/**/libraries/
+# Commented out lines below are for Maven/Gradle auto-import (uncomment if needed)
+# .idea/artifacts
+# .idea/compiler.xml
+# .idea/jarRepositories.xml
+# .idea/modules.xml
+# .idea/*.iml
+# .idea/modules
+# *.iml
+# *.ipr
+cmake-build-*/ # CMake builds
+.idea/**/mongoSettings.xml
+*.iws # Older IntelliJ format
+.idea_modules/ # sbt-idea plugin
+atlassian-ide-plugin.xml # JIRA plugin
+.idea/replstate.xml # Cursive Clojure plugin
+.idea/sonarlint/ # SonarLint plugin
+.idea/httpRequests/ # Editor-based Rest Client cache
+.idea/caches/build_file_checksums.ser # Android studio cache
+
+# VS Code
+.vscode/ # Ignoring the whole folder is simple, but consider committing shared settings like settings.json, launch.json
+# If you want to share some settings:
+# .vscode/*
+# !.vscode/settings.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# OS Generated Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary Files (e.g., Vim)
+# ------------------------------------------------------------------------------
+*~
+*.swp
+*.swo
+*.bak
+
+# Documentation Builds
+# ------------------------------------------------------------------------------
+docs/_build/ # Sphinx
+/site # MkDocs
+
+# Type Checking / Linting Caches
+# ------------------------------------------------------------------------------
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# Other Tooling
+# ------------------------------------------------------------------------------
+# Scrapy (Only if using Scrapy in the same project)
+# .scrapy
+
+# Celery (Only if using Celery)
+celerybeat-schedule
+celerybeat.pid
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints
+
+# Lock files (Usually recommended to commit for applications, ignore for libraries)
+# Pipfile.lock
+# poetry.lock
+# pdm.lock
+.pdm.toml # PDM config often user-specific
+staticfiles/
+nginx/conf/

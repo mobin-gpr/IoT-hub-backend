@@ -1,0 +1,31 @@
+"""
+Development settings for core project.
+
+These settings are for local development only.
+"""
+
+from .base import *
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = "django-insecure-#6a1i+g3&t2g)rxc-w3)bfbo1)9l#)km2(o6dh-)ttz6wqbovb"
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
+
+# Database - SQLite for development
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
+
+# Cache using Redis (for development)
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ.get("REDIS_URL", "redis://localhost:6379/1"),
+    }
+}
