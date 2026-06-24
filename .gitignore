@@ -191,3 +191,4 @@ celerybeat.pid
 .pdm.toml # PDM config often user-specific
 staticfiles/
 nginx/conf/
+.env.prod

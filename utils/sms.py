@@ -1,26 +1,18 @@
 import logging
+from accounts.tasks import send_verification_code_task
 
 logger = logging.getLogger(__name__)
 
 
 def send_verification_code(phone_number, code):
     """
-    Send verification code via SMS.
-    Currently mocked for development - only logs the code.
-    In production, integrate with SMS service provider.
-
-    Args:
-        phone_number (str): Recipient phone number (e.g., "09123456789")
-        code (str): Verification code to send
-
-    Returns:
-        bool: True if sent successfully, False otherwise
+    Send verification code via SMS using Celery task.
+    This function is kept for backward compatibility with views.
     """
     try:
-        # TODO: Implement actual SMS sending logic
-        # Example: use SMS.ir, Kaveh Negar, etc.
-        logger.info(f"SMS verification code for {phone_number}: {code}")
+        send_verification_code_task.delay(phone_number, code)
+        logger.info(f"SMS task queued for {phone_number}")
         return True
     except Exception as e:
-        logger.error(f"Failed to send SMS to {phone_number}: {e}")
+        logger.error(f"Failed to queue SMS task for {phone_number}: {e}")
         return False

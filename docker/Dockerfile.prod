@@ -1,38 +1,73 @@
 FROM python:3.12-slim
 
+
+
 WORKDIR /app
 
+
+
 # Install system dependencies
+
 RUN apt-get update && apt-get install -y \
+
     gcc \
+
     libpq-dev \
+
     && rm -rf /var/lib/apt/lists/*
 
+
+
 # Install uv
-RUN pip install uv --no-cache-dir
+
+RUN pip install uv
+
+
 
 # Copy dependency files first (for better caching)
+
 COPY pyproject.toml uv.lock ./
 
+
+
 # Install ALL dependencies using uv pip with pyproject.toml
-RUN uv pip install --system --no-cache-dir .
+
+RUN uv pip install --system .
+
+
+
+# Install gunicorn explicitly (just in case)
+
+RUN uv pip install --system gunicorn
+
+
 
 # Copy project files
+
 COPY . .
 
-# Create media directory
-RUN mkdir -p /app/media
+
 
 # Collect static files
-RUN python manage.py collectstatic --noinput --clear
+
+RUN python manage.py collectstatic --noinput
+
+
 
 # Set environment variables
-ENV DJANGO_ENV=production
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
 
-# Expose port (internal only, nginx handles external)
+ENV DJANGO_ENV=production
+
+ENV PYTHONUNBUFFERED=1
+
+
+
+# Expose port
+
 EXPOSE 8000
 
+
+
 # Run with gunicorn (production ready)
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "sync", "--timeout", "120", "--graceful-timeout", "30", "--keepalive", "5"]
+
+CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]

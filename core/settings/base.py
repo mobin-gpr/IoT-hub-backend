@@ -155,6 +155,10 @@ SPECTACULAR_SETTINGS = {
     ],
 }
 
+# ============== SMS.ir Configuration ==============
+SMS_API_URL = os.environ.get("SMS_API_URL", "https://api.sms.ir/v1/send")
+SMS_TEMPLATE_ID = os.environ.get("SMS_TEMPLATE_ID", 523562)
+
 # ============== Celery Configuration ==============
 CELERY_BROKER_URL = os.environ.get(
     "CELERY_BROKER_URL", "amqp://iotuser:iotpass@localhost:5672//"
