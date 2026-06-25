@@ -8,17 +8,26 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.generics import ListAPIView, DestroyAPIView
 
 from utils.sms import send_verification_code
+from utils.device_info import get_device_info, get_client_ip
+from accounts.models import UserSession
 from .serializers import (
     LoginSendOTPSerializer,
     OTPVerifySerializer,
+    UserSessionSerializer,
 )
 from .openapi.authentication_schemas import (
     login_send_otp_schema,
     login_verify_otp_schema,
+)
+from .openapi.session_schemas import (
+    user_session_list_schema,
+    revoke_session_schema,
+    revoke_all_sessions_schema,
 )
 
 # --- Logging Setup ---
@@ -151,6 +160,21 @@ class LoginVerifyOTPView(APIView):
                     },
                 )
 
+                # Track user session
+                user_agent = request.META.get("HTTP_USER_AGENT", "")
+                ip_address = get_client_ip(request)
+                device_info = get_device_info(user_agent)
+
+                UserSession.objects.create(
+                    user=user,
+                    device_name=device_info["device_name"],
+                    device_type=device_info["device_type"],
+                    browser=device_info["browser"],
+                    os=device_info["os"],
+                    ip_address=ip_address,
+                    user_agent=user_agent,
+                )
+
                 # Generate JWT tokens
                 refresh = RefreshToken.for_user(user)
 
@@ -182,6 +206,141 @@ class LoginVerifyOTPView(APIView):
         except Exception as e:
             accounts_logger.error(
                 f"Error in LoginVerifyOTPView for {request.data.get('phone_number')}: {e}",
+                exc_info=True,
+            )
+            return Response(
+                {"detail": "خطای داخلی سرور."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+# ============================================================================
+# 📱 Session Management Views
+# ============================================================================
+
+
+class UserSessionListView(ListAPIView):
+    """
+    📋 List all user sessions with device information.
+
+    GET /api/v1/accounts/sessions/
+
+    Returns a list of all sessions for the authenticated user,
+    including device details, IP address, and activity status.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSessionSerializer
+
+    def get_queryset(self):
+        """
+        Return sessions for the authenticated user.
+        """
+        user = self.request.user
+        queryset = user.sessions.all()
+
+        # Add can_revoke_others field to each session
+        for session in queryset:
+            session.can_revoke_others = session.is_old_session
+
+        return queryset
+
+
+class RevokeSessionView(DestroyAPIView):
+    """
+    🚫 Revoke a specific user session.
+
+    DELETE /api/v1/accounts/sessions/{id}/
+
+    Revokes (deactivates) a specific session. If the session being revoked
+    is older than 7 days, all other active sessions will also be revoked.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSessionSerializer
+    lookup_url_kwarg = "session_id"
+
+    def get_queryset(self):
+        """
+        Return sessions for the authenticated user only.
+        """
+        return self.request.user.sessions.all()
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Revoke the specific session only.
+        """
+        try:
+            session = self.get_object()
+
+            # Revoke the requested session only
+            session.revoke()
+
+            return Response(
+                {"detail": "جلسه با موفقیت لغو شد."},
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            accounts_logger.error(
+                f"Error in RevokeSessionView for user {request.user.id}: {e}",
+                exc_info=True,
+            )
+            return Response(
+                {"detail": "خطای داخلی سرور."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class RevokeAllSessionsView(APIView):
+    """
+    🚫 Revoke all active sessions except the current one.
+
+    POST /api/v1/accounts/sessions/revoke-all/
+
+    Revokes all active sessions for the authenticated user except
+    the current session. Useful for logging out from all other devices.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        Revoke all sessions except the current one.
+        """
+        try:
+            # Get current session based on user agent and IP
+            user_agent = request.META.get("HTTP_USER_AGENT", "")
+            ip_address = get_client_ip(request)
+
+            # Find current session (most recent with matching user agent and IP)
+            current_session = (
+                request.user.sessions.filter(
+                    user_agent=user_agent, ip_address=ip_address, is_active=True
+                )
+                .order_by("-created_at")
+                .first()
+            )
+
+            # Revoke all other active sessions
+            other_sessions = request.user.sessions.filter(is_active=True)
+            if current_session:
+                other_sessions = other_sessions.exclude(id=current_session.id)
+
+            revoked_count = other_sessions.count()
+            other_sessions.update(is_active=False)
+
+            return Response(
+                {
+                    "detail": f"{revoked_count} جلسه دیگر با موفقیت لغو شدند.",
+                    "revoked_count": revoked_count,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            accounts_logger.error(
+                f"Error in RevokeAllSessionsView for user {request.user.id}: {e}",
                 exc_info=True,
             )
             return Response(

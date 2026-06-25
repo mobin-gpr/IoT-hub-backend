@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
@@ -44,3 +45,45 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.phone_number
+
+
+class UserSession(models.Model):
+    """Model to track user login sessions with device information."""
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="sessions", verbose_name="کاربر"
+    )
+    device_name = models.CharField(
+        max_length=255, blank=True, verbose_name="نام دستگاه"
+    )
+    device_type = models.CharField(
+        max_length=50, blank=True, verbose_name="نوع دستگاه"
+    )  # e.g., 'mobile', 'desktop', 'tablet'
+    browser = models.CharField(max_length=255, blank=True, verbose_name="مرورگر")
+    os = models.CharField(max_length=255, blank=True, verbose_name="سیستم عامل")
+    ip_address = models.GenericIPAddressField(
+        null=True, blank=True, verbose_name="IP آدرس"
+    )
+    user_agent = models.TextField(blank=True, verbose_name="User Agent")
+    location = models.CharField(max_length=255, blank=True, verbose_name="موقعیت")
+    is_active = models.BooleanField(default=True, verbose_name="فعال")
+    last_activity = models.DateTimeField(auto_now=True, verbose_name="آخرین فعالیت")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
+
+    class Meta:
+        verbose_name = "جلسه کاربر"
+        verbose_name_plural = "جلسات کاربران"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.phone_number} - {self.device_name or 'Unknown Device'}"
+
+    def revoke(self):
+        """Revoke this session by marking it as inactive."""
+        self.is_active = False
+        self.save()
+
+    @property
+    def is_old_session(self):
+        """Check if session is older than 7 days."""
+        return (timezone.now() - self.created_at).days > 7

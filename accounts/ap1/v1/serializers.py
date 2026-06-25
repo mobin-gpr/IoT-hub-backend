@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.conf import settings
 from django.contrib.auth import get_user_model
 import re
+from accounts.models import UserSession
 
 User = get_user_model()
 
@@ -71,3 +72,30 @@ class OTPVerifySerializer(BasePhoneSerializer):
         if not value.isdigit():
             raise serializers.ValidationError("کد تایید باید فقط شامل ارقام باشد.")
         return value
+
+
+class UserSessionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for UserSession model to display session information.
+    """
+
+    is_old_session = serializers.BooleanField(read_only=True)
+    can_revoke_others = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = UserSession
+        fields = [
+            "id",
+            "device_name",
+            "device_type",
+            "browser",
+            "os",
+            "ip_address",
+            "location",
+            "is_active",
+            "last_activity",
+            "created_at",
+            "is_old_session",
+            "can_revoke_others",
+        ]
+        read_only_fields = fields

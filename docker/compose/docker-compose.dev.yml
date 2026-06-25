@@ -90,8 +90,8 @@ services:
       - RABBITMQ_DEFAULT_USER=iotuser
       - RABBITMQ_DEFAULT_PASS=iotpass
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5673:5672"
+      - "15673:15672"
 
   influxdb:
     image: influxdb:2.7
