@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView as SimpleJWTTokenRefreshView
 from rest_framework.generics import ListAPIView, DestroyAPIView
 
 from utils.sms import send_verification_code
@@ -23,6 +24,7 @@ from .serializers import (
 from .openapi.authentication_schemas import (
     login_send_otp_schema,
     login_verify_otp_schema,
+    token_refresh_schema,
 )
 from .openapi.session_schemas import (
     user_session_list_schema,
@@ -184,8 +186,8 @@ class LoginVerifyOTPView(APIView):
                     "phone_number": user.phone_number,
                     "first_name": user.first_name,
                     "last_name": user.last_name,
-                    "profile_image": None,  # No profile image for new users
-                    "role": "regular_user",  # Default role
+                    "profile_image": None,
+                    "role": "regular_user",
                     "is_approved": user.is_approved,
                 }
 
@@ -214,11 +216,25 @@ class LoginVerifyOTPView(APIView):
             )
 
 
+@token_refresh_schema
+class CustomTokenRefreshView(SimpleJWTTokenRefreshView):
+    """
+    🔄 Refresh JWT access token using refresh token.
+
+    POST /api/v1/accounts/token/refresh/
+
+    Returns a new access token.
+    """
+
+    pass
+
+
 # ============================================================================
 # 📱 Session Management Views
 # ============================================================================
 
 
+@user_session_list_schema
 class UserSessionListView(ListAPIView):
     """
     📋 List all user sessions with device information.
@@ -246,6 +262,7 @@ class UserSessionListView(ListAPIView):
         return queryset
 
 
+@revoke_session_schema
 class RevokeSessionView(DestroyAPIView):
     """
     🚫 Revoke a specific user session.
@@ -292,6 +309,7 @@ class RevokeSessionView(DestroyAPIView):
             )
 
 
+@revoke_all_sessions_schema
 class RevokeAllSessionsView(APIView):
     """
     🚫 Revoke all active sessions except the current one.

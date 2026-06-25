@@ -163,3 +163,64 @@ login_verify_otp_schema = extend_schema(
         ),
     },
 )
+
+
+token_refresh_schema = extend_schema(
+    tags=["🔐 Authentication"],
+    summary="🔄 Refresh Access Token",
+    description="""
+    Obtain a new access token using a valid refresh token.
+
+    ## 📋 Process Flow:
+    1. ✅ Validates refresh token
+    2. 🔍 Checks if refresh token is blacklisted (if blacklist is enabled)
+    3. 🔑 Generates a new access token
+    4. 📤 Returns the new access token
+
+    ## 📝 Request Body:
+    - `refresh`: Valid refresh token (string, required)
+
+    ## 🔐 Authentication:
+    - No authentication required (AllowAny)
+    - The refresh token itself is used for validation
+
+    ## 📊 Response Includes:
+    - **access**: New JWT access token (valid for 180 minutes)
+
+    ## ⚠️ Error Responses:
+    - **401**: Invalid or expired refresh token
+    - **500**: Server error
+
+    ## 💡 Notes:
+    - Refresh tokens are valid for 7 days (configurable via `SIMPLE_JWT['REFRESH_TOKEN_LIFETIME']`)
+    - If `ROTATE_REFRESH_TOKENS` is enabled, a new refresh token will also be returned
+    - The old refresh token will be blacklisted if `BLACKLIST_AFTER_ROTATION` is enabled
+    """,
+    request=serializers.Serializer,
+    responses={
+        200: OpenApiResponse(
+            description="✅ New access token generated successfully",
+            examples=[
+                OpenApiExample(
+                    "Success Response",
+                    value={
+                        "access": "eyJhbGciOiJIUzI1NiIs...",
+                        "refresh": "eyJhbGciOiJIUzI1NiIs...",
+                    },
+                ),
+            ],
+        ),
+        401: OpenApiResponse(
+            description="❌ Unauthorized - Invalid or expired refresh token",
+            examples=[
+                OpenApiExample(
+                    "Invalid Token",
+                    value={
+                        "detail": "توکن نامعتبر است یا منقضی شده است.",
+                        "code": "token_not_valid",
+                    },
+                ),
+            ],
+        ),
+    },
+)

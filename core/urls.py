@@ -22,12 +22,25 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
+from drf_spectacular.utils import extend_schema
+
+
+class HiddenSpectacularAPIView(SpectacularAPIView):
+    """
+    Custom SpectacularAPIView that is excluded from the generated schema.
+    This prevents the '/api/schema/' endpoint from appearing in the API documentation.
+    """
+
+    @extend_schema(exclude=True)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/accounts/", include("accounts.ap1.v1.urls")),
-    # OpenAPI schema
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    # OpenAPI schema (excluded from documentation)
+    path("api/schema/", HiddenSpectacularAPIView.as_view(), name="schema"),
     # Swagger UI
     path(
         "swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"
