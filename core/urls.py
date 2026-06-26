@@ -39,6 +39,7 @@ class HiddenSpectacularAPIView(SpectacularAPIView):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/accounts/", include("accounts.ap1.v1.urls")),
+    path("api/v1/devices/", include("devices.api.v1.urls")),
     # OpenAPI schema (excluded from documentation)
     path("api/schema/", HiddenSpectacularAPIView.as_view(), name="schema"),
     # Swagger UI
