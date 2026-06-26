@@ -7,6 +7,7 @@ class Device(models.Model):
     """
     Model representing an IoT device.
     """
+
     uuid = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
