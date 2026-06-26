@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     build:
@@ -23,6 +21,7 @@ services:
       - redis
       - rabbitmq
       - influxdb
+      - emqx
 
   celery_worker:
     build:
@@ -45,6 +44,7 @@ services:
       - redis
       - rabbitmq
       - influxdb
+      - emqx
 
   celery_beat:
     build:
@@ -67,6 +67,7 @@ services:
       - redis
       - rabbitmq
       - influxdb
+      - emqx
 
   db:
     image: postgres:15
@@ -104,6 +105,26 @@ services:
     volumes:
       - influxdb_data:/var/lib/influxdb2
 
+  emqx:
+    image: emqx/emqx:5.7
+    environment:
+      - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+      - EMQX_DASHBOARD__DEFAULT_PASSWORD=public
+      - EMQX_ALLOW_ANONYMOUS=true
+      - EMQX_LOG__LEVEL=info
+    ports:
+      - "11883:1883"   # MQTT TCP port (changed to 11883)
+      - "18884:8883"   # MQTT SSL port (changed to 18884)
+      - "18083:8083"   # MQTT WebSocket port (changed to 18083)
+      - "18084:8084"   # MQTT WebSocket SSL port (changed to 18084)
+      - "28083:18083"  # Dashboard HTTP port (changed to 28083)
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - emqx_log:/opt/emqx/log
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   influxdb_data:
+  emqx_data:
+  emqx_log:

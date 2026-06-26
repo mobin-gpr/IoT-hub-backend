@@ -39,6 +39,8 @@ services:
 
       - influxdb
 
+      - emqx
+
     restart: unless-stopped
 
 
@@ -78,6 +80,8 @@ services:
 
       - influxdb
 
+      - emqx
+
     restart: unless-stopped
 
 
@@ -116,6 +120,8 @@ services:
       - rabbitmq
 
       - influxdb
+
+      - emqx
 
     restart: unless-stopped
 
@@ -208,6 +214,39 @@ services:
 
       - "8086:8086"
 
+  emqx:
+
+    image: emqx/emqx:5.7
+
+    environment:
+
+      - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+
+      - EMQX_DASHBOARD__DEFAULT_PASSWORD=${EMQX_PASSWORD:-public}
+
+      - EMQX_ALLOW_ANONYMOUS=${EMQX_ALLOW_ANONYMOUS:-false}
+
+      - EMQX_LOG__LEVEL=info
+
+    ports:
+
+      - "11883:1883"   # MQTT TCP port (11883 host due to Windows port exclusion)
+
+      - "18884:8883"   # MQTT SSL port
+
+      - "8083:8083"   # MQTT WebSocket port
+
+      - "8084:8084"   # MQTT WebSocket SSL port
+
+      - "18083:18083" # Dashboard HTTP port
+
+    volumes:
+
+      - emqx_data:/opt/emqx/data
+
+      - emqx_log:/opt/emqx/log
+
+    restart: unless-stopped
 
 
 volumes:
@@ -215,3 +254,7 @@ volumes:
   postgres_data:
 
   influxdb_data:
+
+  emqx_data:
+
+  emqx_log:
