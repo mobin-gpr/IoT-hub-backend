@@ -82,19 +82,19 @@ class DeviceUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = Device.objects.all()
     lookup_field = "uuid"
 
-    @extend_schema(**device_retrieve_schema)
+    @device_retrieve_schema
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    @extend_schema(**device_update_schema)
+    @device_update_schema
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
-    @extend_schema(**device_update_schema)
+    @device_update_schema
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
-    @extend_schema(**device_delete_schema)
+    @device_delete_schema
     def delete(self, request, *args, **kwargs):
         return super().delete(request, *args, **kwargs)
 
@@ -125,7 +125,7 @@ class CacheAllACLsView(APIView):
 
     permission_classes = [IsAuthenticated, IsAdminUser]
 
-    @extend_schema(**cache_all_acls_schema)
+    @cache_all_acls_schema
     def post(self, request):
         """
         Cache all device ACLs in Redis.
