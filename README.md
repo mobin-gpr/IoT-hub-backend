@@ -6,7 +6,11 @@
 ![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=for-the-badge&logo=postgresql)
 ![Redis](https://img.shields.io/badge/Redis-8.0-red?style=for-the-badge&logo=redis)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.12-orange?style=for-the-badge&logo=rabbitmq)
+![InfluxDB](https://img.shields.io/badge/InfluxDB-2.7-purple?style=for-the-badge&logo=influxdb)
 ![EMQX](https://img.shields.io/badge/EMQX-5.x-teal?style=for-the-badge&logo=mqtt)
+![Docker](https://img.shields.io/badge/Docker-24.0-blue?style=for-the-badge&logo=docker)
+![DRF](https://img.shields.io/badge/DRF-3.17-red?style=for-the-badge&logo=djangorestframework)
 
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Active-success.svg?style=for-the-badge)
@@ -69,12 +73,8 @@ IoT Hub Backend is a robust Django REST API for managing IoT devices with MQTT a
 git clone <repository-url>
 cd ioT-hub-backend
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies using uv
+uv sync
 
 # Configure environment variables
 cp .env.example .env

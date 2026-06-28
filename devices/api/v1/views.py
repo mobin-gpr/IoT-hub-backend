@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from drf_spectacular.utils import extend_schema
 
 from devices.permissions import CanCreateDevice
 from .serializers import (
@@ -10,7 +11,14 @@ from .serializers import (
     DeviceAuthSerializer,
     DeviceUpdateSerializer,
 )
-from .openapi.device_schemas import device_create_schema, device_auth_schema
+from .openapi.device_schemas import (
+    device_create_schema,
+    device_auth_schema,
+    device_retrieve_schema,
+    device_update_schema,
+    device_delete_schema,
+    cache_all_acls_schema,
+)
 from devices.models import Device
 from devices.redis_acl import delete_device_acl, cache_all_device_acls
 
@@ -74,6 +82,22 @@ class DeviceUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = Device.objects.all()
     lookup_field = "uuid"
 
+    @extend_schema(**device_retrieve_schema)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(**device_update_schema)
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(**device_update_schema)
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+    @extend_schema(**device_delete_schema)
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
     def get_serializer_class(self):
         """
         Return appropriate serializer based on action.
@@ -101,6 +125,7 @@ class CacheAllACLsView(APIView):
 
     permission_classes = [IsAuthenticated, IsAdminUser]
 
+    @extend_schema(**cache_all_acls_schema)
     def post(self, request):
         """
         Cache all device ACLs in Redis.
