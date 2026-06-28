@@ -15,31 +15,75 @@ device_create_schema = extend_schema(
     tags=["📱 Devices"],
     summary="📲 Create a New IoT Device",
     description="""
-    Create a new IoT device with auto-generated secure password.
+    Create a new IoT device with auto-generated secure password and topic-based ACL.
 
     ## 🔐 Authentication Required
     - User must be authenticated (JWT token required)
     - User must be a superuser or belong to the 'device_creators' group
 
     ## 📋 Process Flow:
-    1. ✅ Validates input data (name, username, model)
+    1. ✅ Validates input data (name, username, model, topics)
     2. 🔑 Auto-generates a strong password (16 chars, mix of upper/lower/digits/special)
     3. 🔒 Hashes the password before storing in database
-    4. 📤 Returns the device details with `plain_password` (visible only once)
+    4. ⚡ Automatically caches device ACL in Redis for EMQX authorization
+    5. 📤 Returns the device details with `plain_password` (visible only once)
 
-    ## 📝 Request Body:
-    - `name` (required): Human-readable device name
-    - `model` (optional): Device model (e.g., ESP32, Raspberry Pi)
-    - `username` (required): Unique username for device authentication
+    ## 📝 Request Body Fields:
+
+    ### Required Fields:
+    - `name` (string): Human-readable device name
+      - Example: "Sensor_01", "Temperature_Monitor"
+      - Cannot be empty or whitespace only
+
+    - `username` (string): Unique username for device authentication
+      - Example: "sensor_01", "device_123"
+      - Must be unique across all devices
+      - Used for MQTT authentication with EMQX
+
+    ### Optional Fields:
+    - `model` (string): Device model or type
+      - Example: "ESP32", "Raspberry Pi", "Arduino"
+      - Can be empty
+
+    - `is_active` (boolean): Device active status
+      - Default: true
+      - If false, device cannot connect to EMQX
+
+    - `topics` (array): List of topic configurations for ACL
+      - Each topic is an object with:
+        - `name` (string): Topic name (e.g., "status", "cmd", "config")
+        - `actions` (array): List of allowed actions
+          - "publish": Device can publish to this topic
+          - "subscribe": Device can subscribe to this topic
+      - Example:
+        ```json
+        [
+          {"name": "status", "actions": ["publish"]},
+          {"name": "cmd", "actions": ["subscribe"]},
+          {"name": "config", "actions": ["publish", "subscribe"]}
+        ]
+        ```
+      - Topic names in Redis will be formatted as: `{topic_name}_{device_uuid}`
+      - If empty, device will have no MQTT permissions
 
     ## 📊 Response:
     - Returns the created device details including `plain_password`
     - `uuid`, `owner`, `created_at`, `updated_at` are set automatically
     - ⚠️ The `plain_password` is shown only in this response
       and will never be accessible again
+    - Device ACL is automatically cached in Redis with key: `emqx:acl:{username}`
+
+    ## 🔒 Redis ACL Format:
+    After creation, the device ACL is cached in Redis:
+    ```json
+    {
+      "pub": ["status_uuid", "config_uuid"],
+      "sub": ["cmd_uuid", "config_uuid"]
+    }
+    ```
 
     ## ⚠️ Error Responses:
-    - **400**: Invalid data (duplicate username, empty name, etc.)
+    - **400**: Invalid data (duplicate username, empty name, invalid topics format)
     - **401**: Unauthorized (missing/invalid JWT)
     - **403**: Forbidden (insufficient permissions)
     """,
@@ -59,6 +103,11 @@ device_create_schema = extend_schema(
                             "username": "sensor_01",
                             "plain_password": "aB3#xY9$mN2@kL7!",
                             "is_active": True,
+                            "topics": [
+                                {"name": "status", "actions": ["publish"]},
+                                {"name": "cmd", "actions": ["subscribe"]},
+                                {"name": "config", "actions": ["publish", "subscribe"]},
+                            ],
                             "owner": 1,
                             "created_at": "2026-06-26T10:00:00Z",
                             "updated_at": "2026-06-26T10:00:00Z",
