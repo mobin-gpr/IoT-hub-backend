@@ -4,6 +4,7 @@ import secrets
 import string
 
 from devices.models import Device
+from devices.redis_acl import cache_device_acl
 
 
 class DeviceCreateSerializer(serializers.ModelSerializer):
@@ -25,6 +26,7 @@ class DeviceCreateSerializer(serializers.ModelSerializer):
             "username",
             "plain_password",
             "is_active",
+            "topics",
             "owner",
             "created_at",
             "updated_at",
@@ -40,6 +42,7 @@ class DeviceCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         Create a new device with auto-generated secure password.
+        Cache device ACL in Redis after creation.
         """
         # Generate secure password
         plain_password = self.generate_secure_password()
@@ -53,6 +56,9 @@ class DeviceCreateSerializer(serializers.ModelSerializer):
             validated_data["owner"] = request.user
 
         device = super().create(validated_data)
+
+        # Cache device ACL in Redis
+        cache_device_acl(device)
 
         # Attach plain_password to the instance for serialization
         device.plain_password = plain_password
@@ -109,3 +115,29 @@ class DeviceAuthSerializer(serializers.Serializer):
         # Attach device to validated data for later use
         data["device"] = device
         return data
+
+
+class DeviceUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating a device.
+    """
+
+    class Meta:
+        model = Device
+        fields = [
+            "name",
+            "model",
+            "is_active",
+            "topics",
+        ]
+
+    def update(self, instance, validated_data):
+        """
+        Update device and cache ACL in Redis.
+        """
+        device = super().update(instance, validated_data)
+
+        # Cache updated device ACL in Redis
+        cache_device_acl(device)
+
+        return device

@@ -49,6 +49,12 @@ class Device(models.Model):
         verbose_name="Is Active",
         help_text="Whether the device is active and allowed to connect",
     )
+    topics = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Topics",
+        help_text="List of topics the device can publish/subscribe to",
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Created At",

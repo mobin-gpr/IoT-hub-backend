@@ -1,11 +1,18 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
 from devices.permissions import CanCreateDevice
-from .serializers import DeviceCreateSerializer, DeviceAuthSerializer
+from .serializers import (
+    DeviceCreateSerializer,
+    DeviceAuthSerializer,
+    DeviceUpdateSerializer,
+)
 from .openapi.device_schemas import device_create_schema, device_auth_schema
+from devices.models import Device
+from devices.redis_acl import delete_device_acl, cache_all_device_acls
 
 
 class DeviceCreateView(APIView):
@@ -51,3 +58,64 @@ class DeviceAuthView(APIView):
 
         # Authentication failed
         return Response({"result": "deny"}, status=status.HTTP_200_OK)
+
+
+class DeviceUpdateDeleteView(RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update or delete a device.
+    Only superusers and users in the 'device_creators' group can manage devices.
+
+    GET: Retrieve device details
+    PUT/PATCH: Update device details
+    DELETE: Delete device
+    """
+
+    permission_classes = [IsAuthenticated, CanCreateDevice]
+    queryset = Device.objects.all()
+    lookup_field = "uuid"
+
+    def get_serializer_class(self):
+        """
+        Return appropriate serializer based on action.
+        """
+        if self.request.method in ["PUT", "PATCH"]:
+            return DeviceUpdateSerializer
+        return DeviceCreateSerializer
+
+    def perform_destroy(self, instance):
+        """
+        Delete device and its ACL from Redis.
+        """
+        # Delete ACL from Redis
+        delete_device_acl(instance.username)
+        # Delete device from database
+        instance.delete()
+
+
+class CacheAllACLsView(APIView):
+    """
+    Cache all device ACLs from PostgreSQL to Redis.
+    Only superusers can access this endpoint.
+    This is useful when Redis data is lost due to power outage or other issues.
+    """
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def post(self, request):
+        """
+        Cache all device ACLs in Redis.
+        """
+        try:
+            count = cache_all_device_acls()
+            return Response(
+                {
+                    "detail": f"با موفقیت {count} دستگاه ACL کش شد.",
+                    "cached_count": count,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"خطا در کش کردن ACLها: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

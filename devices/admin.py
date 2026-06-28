@@ -8,3 +8,29 @@ class DeviceAdmin(admin.ModelAdmin):
     list_filter = ("is_active", "owner", "created_at")
     search_fields = ("name", "uuid", "username", "model")
     readonly_fields = ("uuid", "created_at", "updated_at")
+    fieldsets = (
+        (
+            "Basic Information",
+            {
+                "fields": ("name", "model", "uuid", "owner"),
+            },
+        ),
+        (
+            "Authentication",
+            {
+                "fields": ("username", "password"),
+            },
+        ),
+        (
+            "Topics & Status",
+            {
+                "fields": ("topics", "is_active"),
+            },
+        ),
+        (
+            "Timestamps",
+            {
+                "fields": ("created_at", "updated_at"),
+            },
+        ),
+    )
