@@ -110,7 +110,7 @@ services:
     environment:
       - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
       - EMQX_DASHBOARD__DEFAULT_PASSWORD=public
-      - EMQX_ALLOW_ANONYMOUS=true
+      - EMQX_ALLOW_ANONYMOUS=false
       - EMQX_LOG__LEVEL=info
     ports:
       - "11883:1883"   # MQTT TCP port (changed to 11883)
