@@ -3,7 +3,8 @@ Redis ACL management helper for device topics.
 
 This module provides functions to cache device ACLs in Redis for EMQX authorization.
 Redis key format: emqx:acl:{username}
-Redis value format: Hash with 'pub' and 'sub' fields containing JSON arrays
+Redis value format: Hash with numbered fields in EMQX ACL format
+Format: HSET emqx:acl:{username} 1 "allow,all,publish,devices/{uuid}/topic" 2 "allow,all,subscribe,devices/{uuid}/topic"
 """
 
 import json
@@ -30,23 +31,23 @@ def build_topic_name(uuid, topic_name):
         topic_name: Topic name (e.g., 'status', 'event')
 
     Returns:
-        Full topic name in format: {topic_name}_{uuid}
+        Full topic name in format: devices/{uuid}/{topic_name}
     """
-    return f"{topic_name}_{uuid}"
+    return f"devices/{uuid}/{topic_name}"
 
 
 def cache_device_acl(device):
     """
-    Cache device ACL in Redis as a hash.
+    Cache device ACL in Redis as a hash in EMQX ACL format.
 
     Args:
         device: Device model instance
     """
     redis_client = get_redis_client()
 
-    # Build ACL data
-    pub_topics = []
-    sub_topics = []
+    # Build ACL rules in EMQX format
+    acl_rules = []
+    index = 1
 
     # Process topics
     for topic in device.topics:
@@ -54,15 +55,21 @@ def cache_device_acl(device):
         actions = topic.get("actions", [])
         full_topic = build_topic_name(str(device.uuid), topic_name)
 
-        if "publish" in actions:
-            pub_topics.append(full_topic)
-        if "subscribe" in actions:
-            sub_topics.append(full_topic)
+        for action in actions:
+            if action in ["publish", "subscribe"]:
+                acl_rule = f"allow,all,{action},{full_topic}"
+                acl_rules.append((index, acl_rule))
+                index += 1
 
     # Store in Redis as hash with key: emqx:acl:{username}
+    # Format: HSET emqx:acl:{username} 1 "allow,all,publish,devices/{uuid}/topic" 2 "allow,all,subscribe,devices/{uuid}/topic"
     redis_key = f"emqx:acl:{device.username}"
-    redis_client.hset(redis_key, "pub", json.dumps(pub_topics))
-    redis_client.hset(redis_key, "sub", json.dumps(sub_topics))
+    if acl_rules:
+        for idx, rule in acl_rules:
+            redis_client.hset(redis_key, str(idx), rule)
+    else:
+        # If no topics, clear the key
+        redis_client.delete(redis_key)
 
     # Also set TTL (optional, adjust as needed)
     # redis_client.expire(redis_key, 86400)  # 24 hours
@@ -101,16 +108,28 @@ def get_device_acl(username):
     redis_client = get_redis_client()
     redis_key = f"emqx:acl:{username}"
 
-    # Get hash fields
-    pub_data = redis_client.hget(redis_key, "pub")
-    sub_data = redis_client.hget(redis_key, "sub")
+    # Get all hash fields
+    acl_data = redis_client.hgetall(redis_key)
 
-    if pub_data or sub_data:
-        acl_data = {
-            "pub": json.loads(pub_data) if pub_data else [],
-            "sub": json.loads(sub_data) if sub_data else []
+    if acl_data:
+        # Parse EMQX ACL format: "allow,all,{action},{topic}"
+        pub_topics = []
+        sub_topics = []
+
+        for idx, rule in acl_data.items():
+            parts = rule.split(",")
+            if len(parts) >= 4:
+                action = parts[2]
+                topic = parts[3]
+                if action == "publish":
+                    pub_topics.append(topic)
+                elif action == "subscribe":
+                    sub_topics.append(topic)
+
+        return {
+            "pub": pub_topics,
+            "sub": sub_topics
         }
-        return acl_data
 
     return None
 

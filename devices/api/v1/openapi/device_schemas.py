@@ -63,7 +63,7 @@ device_create_schema = extend_schema(
           {"name": "config", "actions": ["publish", "subscribe"]}
         ]
         ```
-      - Topic names in Redis will be formatted as: `{topic_name}_{device_uuid}`
+      - Topic names in Redis will be formatted as: `devices/{device_uuid}/{topic_name}`
       - If empty, device will have no MQTT permissions
 
     ## 📊 Response:
@@ -74,12 +74,14 @@ device_create_schema = extend_schema(
     - Device ACL is automatically cached in Redis with key: `emqx:acl:{username}`
 
     ## 🔒 Redis ACL Format:
-    After creation, the device ACL is cached in Redis as a hash:
+    After creation, the device ACL is cached in Redis as a hash in EMQX format:
     ```
     Key: emqx:acl:{username}
-    Hash fields:
-      - pub: ["status_uuid", "config_uuid"] (JSON array)
-      - sub: ["cmd_uuid", "config_uuid"] (JSON array)
+    Hash fields (numbered):
+      - 1: "allow,all,publish,devices/{uuid}/status"
+      - 2: "allow,all,subscribe,devices/{uuid}/cmd"
+      - 3: "allow,all,publish,devices/{uuid}/config"
+      - 4: "allow,all,subscribe,devices/{uuid}/config"
     ```
 
     ## ⚠️ Error Responses:
