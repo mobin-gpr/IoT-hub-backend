@@ -13,7 +13,7 @@ SECRET_KEY = "django-insecure-#6a1i+g3&t2g)rxc-w3)bfbo1)9l#)km2(o6dh-)ttz6wqbovb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "web"]
+ALLOWED_HOSTS = ["*"]
 
 # Database - SQLite for development
 DATABASES = {
