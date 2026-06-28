@@ -74,12 +74,12 @@ device_create_schema = extend_schema(
     - Device ACL is automatically cached in Redis with key: `emqx:acl:{username}`
 
     ## 🔒 Redis ACL Format:
-    After creation, the device ACL is cached in Redis:
-    ```json
-    {
-      "pub": ["status_uuid", "config_uuid"],
-      "sub": ["cmd_uuid", "config_uuid"]
-    }
+    After creation, the device ACL is cached in Redis as a hash:
+    ```
+    Key: emqx:acl:{username}
+    Hash fields:
+      - pub: ["status_uuid", "config_uuid"] (JSON array)
+      - sub: ["cmd_uuid", "config_uuid"] (JSON array)
     ```
 
     ## ⚠️ Error Responses:

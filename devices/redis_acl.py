@@ -3,7 +3,7 @@ Redis ACL management helper for device topics.
 
 This module provides functions to cache device ACLs in Redis for EMQX authorization.
 Redis key format: emqx:acl:{username}
-Redis value format: JSON with pub/sub topics
+Redis value format: Hash with 'pub' and 'sub' fields containing JSON arrays
 """
 
 import json
@@ -37,7 +37,7 @@ def build_topic_name(uuid, topic_name):
 
 def cache_device_acl(device):
     """
-    Cache device ACL in Redis.
+    Cache device ACL in Redis as a hash.
 
     Args:
         device: Device model instance
@@ -45,7 +45,8 @@ def cache_device_acl(device):
     redis_client = get_redis_client()
 
     # Build ACL data
-    acl_data = {"pub": [], "sub": []}
+    pub_topics = []
+    sub_topics = []
 
     # Process topics
     for topic in device.topics:
@@ -54,13 +55,14 @@ def cache_device_acl(device):
         full_topic = build_topic_name(str(device.uuid), topic_name)
 
         if "publish" in actions:
-            acl_data["pub"].append(full_topic)
+            pub_topics.append(full_topic)
         if "subscribe" in actions:
-            acl_data["sub"].append(full_topic)
+            sub_topics.append(full_topic)
 
-    # Store in Redis with key: emqx:acl:{username}
+    # Store in Redis as hash with key: emqx:acl:{username}
     redis_key = f"emqx:acl:{device.username}"
-    redis_client.set(redis_key, json.dumps(acl_data))
+    redis_client.hset(redis_key, "pub", json.dumps(pub_topics))
+    redis_client.hset(redis_key, "sub", json.dumps(sub_topics))
 
     # Also set TTL (optional, adjust as needed)
     # redis_client.expire(redis_key, 86400)  # 24 hours
@@ -98,10 +100,17 @@ def get_device_acl(username):
     """
     redis_client = get_redis_client()
     redis_key = f"emqx:acl:{username}"
-    acl_data = redis_client.get(redis_key)
 
-    if acl_data:
-        return json.loads(acl_data)
+    # Get hash fields
+    pub_data = redis_client.hget(redis_key, "pub")
+    sub_data = redis_client.hget(redis_key, "sub")
+
+    if pub_data or sub_data:
+        acl_data = {
+            "pub": json.loads(pub_data) if pub_data else [],
+            "sub": json.loads(sub_data) if sub_data else []
+        }
+        return acl_data
 
     return None
 
