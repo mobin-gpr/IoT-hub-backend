@@ -11,6 +11,7 @@ def send_verification_code(phone_number, code):
     """
     try:
         send_verification_code_task.delay(phone_number, code)
+        print(phone_number, code)
         logger.info(f"SMS task queued for {phone_number}")
         return True
     except Exception as e:

@@ -106,18 +106,18 @@ services:
       - influxdb_data:/var/lib/influxdb2
 
   emqx:
-    image: emqx/emqx:5.7
+    image: emqx/emqx:6.2
     environment:
       - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
       - EMQX_DASHBOARD__DEFAULT_PASSWORD=public
       - EMQX_ALLOW_ANONYMOUS=false
       - EMQX_LOG__LEVEL=info
     ports:
-      - "11883:1883"   # MQTT TCP port (changed to 11883)
-      - "18884:8883"   # MQTT SSL port (changed to 18884)
-      - "18083:8083"   # MQTT WebSocket port (changed to 18083)
-      - "18084:8084"   # MQTT WebSocket SSL port (changed to 18084)
-      - "28083:18083"  # Dashboard HTTP port (changed to 28083)
+      - "11883:1883" # MQTT TCP port (changed to 11883)
+      - "18884:8883" # MQTT SSL port (changed to 18884)
+      - "18083:8083" # MQTT WebSocket port (changed to 18083)
+      - "18084:8084" # MQTT WebSocket SSL port (changed to 18084)
+      - "28083:18083" # Dashboard HTTP port (changed to 28083)
     volumes:
       - emqx_data:/opt/emqx/data
       - emqx_log:/opt/emqx/log
