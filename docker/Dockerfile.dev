@@ -20,6 +20,10 @@ RUN uv pip install --system -e .
 # Copy project files
 COPY . .
 
+# Copy entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Set environment variables
 ENV DJANGO_ENV=development
 ENV PYTHONUNBUFFERED=1
@@ -27,5 +31,6 @@ ENV PYTHONUNBUFFERED=1
 # Expose port
 EXPOSE 8000
 
-# Run development server
+# Run entrypoint then development server
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
